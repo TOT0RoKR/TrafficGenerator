@@ -1,8 +1,8 @@
 server 60.60.60.10 5001
 req_size_dist conf/DCTCP_CDF.txt
-rate 0Mbps 10
-rate 500Mbps 30
-rate 800Mbps 60
+rate 0Mbps 98
+rate 500Mbps 1
+rate 800Mbps 1
 dscp 0 25
 dscp 1 25
 dscp 2 25

@@ -37,13 +37,6 @@ bool init_conn_node(struct conn_node *node, int id, struct conn_list *list)
     }
 
     /* set socket options */
-    if (setsockopt(node->sockfd, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt)) < 0)
-    {
-        char msg[256] = {0};
-        snprintf(msg, 256, "Error: set SO_REUSEADDR (to %s:%hu) in init_conn_node()", list->ip, list->port);
-        perror(msg);
-        return false;
-    }
     if (setsockopt(node->sockfd, IPPROTO_TCP, TCP_NODELAY, &sock_opt, sizeof(sock_opt)) < 0)
     {
         char msg[256] = {0};
@@ -51,7 +44,6 @@ bool init_conn_node(struct conn_node *node, int id, struct conn_list *list)
         perror(msg);
         return false;
     }
-
     if (connect(node->sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
     {
         char msg[256] = {0};

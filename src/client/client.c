@@ -614,39 +614,55 @@ void *listen_connection(void *ptr)
     struct flow_metadata flow;
     char read_buf[TG_MAX_READ] = {0};
 
-    while (true)
-    {
+    /*
+     * while (true)
+     * {
+     */
         if (!read_flow_metadata(node->sockfd, &flow))
         {
             perror("Error: read meatadata");
-            break;
+		/*
+             * break;
+		 */
+		goto out;
         }
 
         if (read_exact(node->sockfd, read_buf, flow.size, TG_MAX_READ, true) != flow.size)
         {
             perror("Error: receive flow");
-            break;
+		/*
+             * break;
+		 */
+		goto out;
         }
 
         node->busy = false;
         pthread_mutex_lock(&(node->list->lock));
         /* not the special flow ID */
-        if (flow.id != 0)
-        {
+	  /*
+         * if (flow.id != 0)
+         * {
+	   */
             node->list->flow_finished++;
             node->list->available_len++;
-        }
+	  /*
+         * }
+	   */
         /* Ohterwise, it's a special flow ID to terminate connection.
            So this connection will no longer be available. */
         pthread_mutex_unlock(&(node->list->lock));
 
         /* a special flow ID to terminate persistent connection */
-        if (flow.id == 0)
-            break;
-        else
+        /* if (flow.id == 0) */
+            /* break; */
+        /* else */
             gettimeofday(&req_stop_time[flow.id - 1], NULL);
-    }
 
+    /*
+     * }
+     */
+
+out:
     close(node->sockfd);
     node->connected = false;
     node->busy = false;
@@ -663,12 +679,14 @@ void run_requests()
 
     for (i = 0; i < req_total_num; i++)
     {
-        sleep_us += req_sleep_us[i];
-        if (sleep_us > usleep_overhead_us)
-        {
-            usleep(sleep_us - usleep_overhead_us);
-            sleep_us = 0;
-        }
+	  /*
+	   * sleep_us += req_sleep_us[i];
+	   * if (sleep_us > usleep_overhead_us)
+	   * {
+	   *     usleep(sleep_us - usleep_overhead_us);
+	   *     sleep_us = 0;
+	   * }
+	   */
         run_request(i);
 
         if (!verbose_mode && i + 1 >= k * req_total_num / 100)
@@ -687,7 +705,10 @@ void run_request(unsigned int req_id)
     unsigned int server_id = req_server_id[req_id];
     int sockfd;
     struct flow_metadata flow;
-    struct conn_node* node = search_conn_list(&connection_lists[server_id]);
+    /*
+     * struct conn_node* node = search_conn_list(&connection_lists[server_id]);
+     */
+    struct conn_node* node = NULL;
     unsigned int active_connections = 0;
     unsigned int i = 0;
 
@@ -760,7 +781,7 @@ void exit_connections()
                 ptr = ptr->next;
             }
         }
-        wait_conn_list(&connection_lists[i]);
+	  wait_conn_list(&connection_lists[i]);
         if (verbose_mode)
             printf("Exit %u/%u connections to %s:%u\n", num, connection_lists[i].len, server_addr[i], server_port[i]);
     }
@@ -779,13 +800,17 @@ void exit_connection(struct conn_node *node)
     if (!node)
         return;
 
-    sockfd = node->sockfd;
+    /*
+     * sockfd = node->sockfd;
+     */
     pthread_mutex_lock(&(node->list->lock));
     node->list->available_len--;
     pthread_mutex_unlock(&(node->list->lock));
-
-    if (!write_flow_req(sockfd, &flow))
-        perror("Error: generate request");
+/*
+ * 
+ *     if (!write_flow_req(sockfd, &flow))
+ *         perror("Error: generate request");
+ */
 }
 
 void print_statistic()
