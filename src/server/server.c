@@ -28,6 +28,8 @@ void* handle_connection(void* ptr);
 /* get usleep overhead in microsecond (us) */
 unsigned int get_sleep_overhead(int iter_num);
 
+#define MAX_THREADS 100000
+
 int main(int argc, char *argv[])
 {
     pid_t pid, sid;
@@ -35,8 +37,9 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;   /* local server address */
     struct sockaddr_in cli_addr;    /* remote client address */
     int sock_opt = 1;
-    pthread_t serv_thread;  /* server thread */
+    pthread_t serv_thread[MAX_THREADS];  /* server thread */
     int* sockfd_ptr = NULL;
+    int i = 0;
     socklen_t len = sizeof(struct sockaddr_in);
 
     /* read arguments */
@@ -50,7 +53,7 @@ int main(int argc, char *argv[])
     /* initialize local server address */
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;    
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(server_port);
 
     /* initialize server socket */
@@ -108,6 +111,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
+        int thread_num = ++i % MAX_THREADS;
         sockfd_ptr = (int*)malloc(sizeof(int));
         if (!sockfd_ptr)
             error("Error: malloc");
@@ -119,12 +123,14 @@ int main(int argc, char *argv[])
             free(sockfd_ptr);
             error("Error: accept");
         }
-        else if (pthread_create(&serv_thread, NULL, handle_connection, (void*)sockfd_ptr) < 0)
+        else if (pthread_create(&(serv_thread[thread_num]), NULL, handle_connection, (void*)sockfd_ptr) < 0)
         {
             close(listen_fd);
             free(sockfd_ptr);
             error("Error: create pthread");
+		exit(EXIT_FAILURE);
         }
+	  pthread_detach(serv_thread[thread_num]);
     }
 
     return 0;
@@ -137,14 +143,17 @@ void* handle_connection(void* ptr)
     int sockfd = *(int*)ptr;
     free(ptr);
 
-    while (1)
-    {
+    /* while (1) */
+    /* { */
         /* read meta data from the request */
         if (!read_flow_metadata(sockfd, &flow))
         {
             if (verbose_mode)
                 printf("Cannot read metadata from the request\n");
-            break;
+		/*
+             * break;
+		 */
+		goto out;
         }
 
         if (verbose_mode)
@@ -155,10 +164,14 @@ void* handle_connection(void* ptr)
         {
             if (verbose_mode)
                 printf("Cannot generate the response\n");
-            break;
+		/*
+		 * break;
+		 */
+		goto out;
         }
-    }
+    /* } */
 
+out:
     close(sockfd);
     return (void*)0;
 }
