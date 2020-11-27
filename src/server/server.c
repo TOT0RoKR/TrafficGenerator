@@ -62,8 +62,6 @@ int main(int argc, char *argv[])
         error("Error: initialize socket");
 
     /* set socket options */
-    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt)) < 0)
-        error("Error: set SO_REUSEADDR option");
     if (setsockopt(listen_fd, IPPROTO_TCP, TCP_NODELAY, &sock_opt, sizeof(sock_opt)) < 0)
         error("ERROR: set TCP_NODELAY option");
 
